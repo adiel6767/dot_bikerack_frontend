@@ -15,7 +15,6 @@ const client = axios.create({
 function Login(){
 
     const navigate  = useNavigate();
-    // const [currentUser, setCurrentUser] = useState(false)
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [wrongpw, setwrongpw] = useState(false)
@@ -48,6 +47,12 @@ function Login(){
     const isFormValid = () => {
       return username.trim() !== "" && password.trim() !== "";
     };
+
+    const handleRegisterClick = (e) => {
+      e.preventDefault();
+
+      navigate('/register')
+    }
 
 
     function submitRegistration(e){
@@ -146,9 +151,9 @@ function Login(){
           <span>?</span>
           <br />
           <span>Don't have an account?</span>
-          <a href="#" className="register-link"> Register</a>
+          <a href="#" className="register-link" onClick={handleRegisterClick}> Register</a>
         </main>
-      </div>
+      </div> 
   );
 }
 
