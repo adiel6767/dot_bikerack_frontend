@@ -2,18 +2,22 @@ import '../css/Login.css';
 import {useEffect,useState} from "react";
 import axios from 'axios';
 import { useUser } from './UserContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
 
 const client = axios.create({
-  baseURL: "https://dot-bikerack-backend.onrender.com/"
+  // baseURL: "https://dot-bikerack-backend.onrender.com/"
+  baseURL: "http://127.0.0.1:8000/"
 })
 
 function Login(){
-
+    const query = new URLSearchParams(useLocation().search);
+    const uid = query.get('uid');
+    const token = query.get('token');
+    const [verificationStatus, setVerificationStatus] = useState('');
     const navigate  = useNavigate();
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -26,7 +30,22 @@ function Login(){
     useEffect(() => {
       const storedRememberMe = localStorage.getItem('rememberMe') === 'true';
       setRememberMe(storedRememberMe);
-    },[])
+
+      const verifyEmail = async () => {
+          if (uid && token) {
+              try {
+                  const response = await axios.get(`http://127.0.0.1:8000/verify-email/${uid}/${token}/`);
+                  setVerificationStatus('Email verified successfully.');
+                  console.log('Verification successful:', response.data.message);
+              } catch (error) {
+                  setVerificationStatus('Verification failed. Please try again.');
+                  console.error('Verification failed:', error);
+              }
+          }
+      };
+
+      verifyEmail();
+    }, [uid, token]);
     
     const handleUsernameChange = (event) => {
         setUsername(event.target.value);
@@ -117,8 +136,9 @@ function Login(){
   }
 
   return (
-      <div id="body" className="d-flex align-items-center py-4 bg-body-tertiary">    
+      <div id="body" className="d-flex align-items-center py-4 bg-body-tertiary">
         <main className="form-signin w-100 m-auto">
+          {verificationStatus && <p>{verificationStatus}</p>}    
           <form onSubmit={(e) => submitRegistration(e)}>
             <h1 className="h3 mb-3 fw-normal">Please sign in</h1>
             <div className="wrongpw">
@@ -145,9 +165,9 @@ function Login(){
             <button className="btn btn-primary w-100 py-2" type="submit" disabled={!isFormValid()}>Sign in</button>
           </form>
           <span>Forgot </span>
-          <a href="#" className="forgot-credentials">Credentials</a>
+          <a href="/forgot-credentials" className="forgot-credentials">Credentials</a>
           <span> / </span>
-          <a href="#" className="forgot-pwd">Password</a>
+          <a href="/password-reset-request" className="forgot-pwd">Password</a>
           <span>?</span>
           <br />
           <span>Don't have an account?</span>

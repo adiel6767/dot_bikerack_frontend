@@ -10,7 +10,8 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
 
 const client = axios.create({
-    baseURL: "https://dot-bikerack-backend.onrender.com/"
+    // baseURL: "https://dot-bikerack-backend.onrender.com/"
+    baseURL: "http://127.0.0.1:8000/"
 })
 
 function Register() {
@@ -76,46 +77,16 @@ function Register() {
             }
         ).then(function(res) {
             // Registration successful, now perform login
-            client.post(
-                "login/",
-                {
-                    credentials: username,
-                    password: password
-                }
-            ).then(function(res) {
-                // Login successful, store username and navigate to home
-                localStorage.setItem('username', username);
-                const accessToken = res.data.access;
-                const refreshToken = res.data.refresh;
-                
-                // Store tokens securely
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken);
+            console.log(res)
+            localStorage.setItem('email', email);
+            navigate("/onboarding")
 
-                return client.get('/user', {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-            })
-            .then(function(userRes) {
-                // Handle the response from the /user request
-                localStorage.setItem('userData', JSON.stringify(userRes.data));
-
-                login();
-                navigate('/home');
-            }).catch(function(error) {
-                // Handle login error
-                console.error("Error logging in:", error);
-            });
         }).catch(function(error) {
             // Handle registration error
             console.error("Error registering:", error);
         });
     }
     
-
-
     if(currentUser){
         return <Home />
     }

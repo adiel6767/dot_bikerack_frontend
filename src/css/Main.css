@@ -11,14 +11,21 @@
   right: 20px;   
   z-index: 1000;
 }
+.save-button{
+  position: absolute;
+  top: 50px;     
+  right: 20px;   
+  z-index: 1000;
+}
 .create_assessment{
   position: absolute;
   top: 70px;     
   right: 20px;   
-  z-index: 1000;
+  z-index: 400;
 }
 .nav-link {
   cursor: pointer;
+  
 }
 .nav-link:hover {
   text-decoration: underline;   
@@ -71,8 +78,8 @@ button {
   opacity: 0.5;
   pointer-events: none;
 }
-.modal-content{
-  position: absolute;
+/* .modal-content{ */
+  /* position: absolute; */
   /* bottom: 0; */
   /* right: 0; */
-}
+/* } */

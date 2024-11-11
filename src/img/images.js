@@ -1,5 +1,6 @@
 //leaflet-icons
 export { default as markerIcon } from 'leaflet/dist/images/marker-icon.png';
+export { default as dragMakerIcon } from '../img/icons/icons8-location-48.png';
 export {default as markerShadow} from 'leaflet/dist/images/marker-shadow.png';
 export {default as userMarkerIcon} from '../img/icons/icons8-user-location-16.png';
 // user_avatars

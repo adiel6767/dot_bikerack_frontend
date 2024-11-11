@@ -1,3 +1,4 @@
+import React, {useState, useEffect} from 'react';
 import '../css/Navbar.css';
 import { useUser } from './UserContext'
 import { useNavigate } from 'react-router-dom';
@@ -8,16 +9,29 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
 
 const client = axios.create({
-    baseURL: "https://dot-bikerack-backend.onrender.com/"
+    baseURL: "http://127.0.0.1:8000/"
+    // baseURL: "https://dot-bikerack-backend.onrender.com/"
 })
 
 function Navbar(){
-
+const [is_staff, setIsStaff] = useState(false)
 const navigate  = useNavigate();
 const {logout} = useUser();
 const userData = JSON.parse(localStorage.getItem('userData'));
-
+// console.log(userData.is_staff)
 const { currentUser } = useUser();
+
+useEffect(() => {
+  // If userData is null, do nothing
+  if (userData === null) {
+    return; // Early exit if userData is null
+  }
+
+  // If userData is defined, check if is_staff exists
+  if (userData && typeof userData.is_staff !== 'undefined') {
+    setIsStaff(userData.is_staff);
+  }
+}, [userData]); // Runs this effect whenever userData changes
 
 const handleLogout = (e) => {
   e.preventDefault();
@@ -66,7 +80,7 @@ return (
         </a>
       ) : (
         <a className="navbar-brand" href="#" style={{ marginLeft: "10px" }}>
-          Bikerackapp
+          Bike Rack App
         </a>
       )}
       <button
@@ -98,6 +112,13 @@ return (
             <li className="nav-item">
               <a className="nav-link" href="/main">
                 Main
+              </a>
+            </li>
+          ) : null}
+          {currentUser && is_staff ? (
+            <li className="nav-item">
+              <a className="nav-link" href="/data">
+                Data
               </a>
             </li>
           ) : null}
