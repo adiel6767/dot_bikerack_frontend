@@ -13,7 +13,7 @@ function ForgotCredentials() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://127.0.0.1:8000/forgot-credentials/', { email })
+        axios.post('https://dot-bikerack-backend-1.onrender/forgot-credentials/', { email })
             .then(response => {
                 setMessage(response.data.message);
                 setTimeout(() => {
