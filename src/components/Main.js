@@ -102,12 +102,12 @@ function Main() {
         }, {})
       );
     const [confirmNewPosition, setConfirmNewPosition] = useState(false);
-    // const [currentMarker, setCurrentMarker] = useState(null);
+    const [currentMarker, setCurrentMarker] = useState(null);
     const [newPosition, setNewPosition] = useState({});
     const [center, setCenter] = useState(null)
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
-    // const [loading, setLoading] = useState(true);  
+    const [loading, setLoading] = useState(true);  
     // const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
 
@@ -121,7 +121,7 @@ function Main() {
                 setAssessmentIds(assessmentIdsArray);
             }
         }
-        // setLoading(false);
+        setLoading(false);
     }, []);
 
     const apiKey = process.env.REACT_APP_API_KEY; 
@@ -146,7 +146,7 @@ useEffect(() => {
             const jsonData = await response.json();
             console.log('response', jsonData);
             setData(jsonData);
-            console.log('data length', jsonData.length); 
+            console.log('data length', jsonData.length); // log jsonData.length instead of data.length
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -650,7 +650,7 @@ useEffect(() => {
       const handleDragEnd = (e, siteId) => {
         const position = e.target.getLatLng();
         setNewPosition({ lat: position.lat, lng: position.lng });
-        // setCurrentMarker(siteId);  
+        setCurrentMarker(siteId);  
         setshowMarkerModal(true);  
         setConfirmNewPosition(true)
       };
