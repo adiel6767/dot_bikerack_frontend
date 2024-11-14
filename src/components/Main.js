@@ -82,10 +82,7 @@ function Main() {
     const [showProfile, setShowProfile] = useState(false);
     const [showEmblem, setShowEmblem] = useState(false);
     const [userImageId, setUserImageId] = useState([]);
-    const [userLocation2, setUserLocation2] = useState(null);
     const [routeCoordinates, setRouteCoordinates] = useState([]);
-    // const [destinationColor, setDestinationColor] = useState('primary');
-    // const [buttonText, setButtonText] = useState('set as destination');
     const [geofences, setGeofences] = useState([]);
     const [destinationMarkerIndex, setDestinationMarkerIndex] = useState(null);
     const images = [bird,cow,sheep,dogeIcon]
@@ -95,20 +92,12 @@ function Main() {
     const [markers, setMarkers] = useState([]);
     const [isAddingMarker, setIsAddingMarker] = useState(false);
     const [changeMarkerLocation, setChangeMarkerLocation] = useState(false);
-    const [markerPositions, setMarkerPositions] = useState(
-        data.reduce((acc, item) => {
-          acc[item.site_id] = [parseFloat(item.latitude), parseFloat(item.longitude)];
-          return acc;
-        }, {})
-      );
     const [confirmNewPosition, setConfirmNewPosition] = useState(false);
     const [currentMarker, setCurrentMarker] = useState(null);
     const [newPosition, setNewPosition] = useState({});
-    const [center, setCenter] = useState(null)
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
     const [loading, setLoading] = useState(true);  
-    // const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
 
     useEffect(() => {
@@ -325,8 +314,9 @@ useEffect(() => {
     }, [isInsideGeofence]);
 
     const handleSetDestination = async (e, index) => {
-        console.log(index);
-        const destinationCoordinates = e.target.value.split(',').map(parseFloat);
+        // console.log('Button Value:', e.currentTarget.value);
+        const destinationCoordinates = e.currentTarget.value.split(',').map(parseFloat);
+        // console.log('destination',destinationCoordinates)
         
         if (destinationMarkerIndex === index) {
             // Unset the destination
@@ -341,9 +331,15 @@ useEffect(() => {
         if (userLocation) {
             const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
 
+
+            const stops = [
+                [userLocation[1], userLocation[0]],
+                [destinationCoordinates[1], destinationCoordinates[0]], 
+            ];
+
             try {
                 const response = await solveRoute({
-                    stops: [userLocation2, destinationCoordinates],
+                    stops: stops,
                     authentication,
                 });
 
@@ -362,7 +358,6 @@ useEffect(() => {
 
     const customIcon = L.icon({
         iconUrl: markerIcon,
-        // shadowUrl: markerShadow,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34]
@@ -742,7 +737,7 @@ useEffect(() => {
                                      <p>{item.latitude}</p>
                                      <p>{item.longitude}</p>
                                      {!changeMarkerLocation && !isRemovalMode && !isAddingMarker && (
-                                         <button className={`btn btn-${destinationMarkerIndex === index ? 'danger' : 'primary'}`} value={`${item.x},${item.y}`} onClick={(e) => handleSetDestination(e, index)}> 
+                                         <button className={`btn btn-${destinationMarkerIndex === index ? 'danger' : 'primary'}`} value={`${(item.latitude)},${(item.longitude)}`} onClick={(e) => handleSetDestination(e, index)}> 
                                              {destinationMarkerIndex === index ? 'unset' : 'set as destination'}
                                          </button>
                                      )}
