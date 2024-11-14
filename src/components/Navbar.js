@@ -17,20 +17,18 @@ const [is_staff, setIsStaff] = useState(false)
 const navigate  = useNavigate();
 const {logout} = useUser();
 const userData = JSON.parse(localStorage.getItem('userData'));
-// console.log(userData.is_staff)
 const { currentUser } = useUser();
 
 useEffect(() => {
-  // If userData is null, do nothing
   if (userData === null) {
-    return; // Early exit if userData is null
+    return; 
   }
 
   // If userData is defined, check if is_staff exists
   if (userData && typeof userData.is_staff !== 'undefined') {
     setIsStaff(userData.is_staff);
   }
-}, [userData]); // Runs this effect whenever userData changes
+}, [userData]); 
 
 const handleLogout = (e) => {
   e.preventDefault();

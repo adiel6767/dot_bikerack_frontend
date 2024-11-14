@@ -2,24 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import L from 'leaflet';
 import CameraCapture from './CameraCapture';
-
-// Leaflet and React-Leaflet
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvent, Polygon  } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import MarkerClusterGroup from 'react-leaflet-cluster';
-
-// ArcGIS
 import * as arcgisRest from '@esri/arcgis-rest-request';
 import { solveRoute } from '@esri/arcgis-rest-routing';
-
-// Bootstrap components
 import { Modal, Button, Nav, Popover, Toast, Container, Row, Col, Form, Alert  } from 'react-bootstrap';
 import { Table } from 'react-bootstrap';
 
-// Images
 import { 
   userMarkerIcon,
-//   markerShadow,
   dragMakerIcon,
   markerIcon,  
   dogeIcon, 
@@ -83,11 +75,6 @@ function Main() {
     const [AchievementsList,setAchievementsList] = useState([]);
     const [data, setData] = useState([]);
     const [userLocation, setUserLocation] = useState([40.829147,-73.876165]);
-    // const [userLocation, setUserLocation] = useState(() => {
-    //     // Retrieve saved location from local storage on initial load
-    //     const savedLocation = localStorage.getItem('userLocation');
-    //     return savedLocation ? JSON.parse(savedLocation) : null;
-    // });
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
@@ -115,13 +102,13 @@ function Main() {
         }, {})
       );
     const [confirmNewPosition, setConfirmNewPosition] = useState(false);
-    const [currentMarker, setCurrentMarker] = useState(null);
+    // const [currentMarker, setCurrentMarker] = useState(null);
     const [newPosition, setNewPosition] = useState({});
     const [center, setCenter] = useState(null)
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
-    const [loading, setLoading] = useState(true);  
-    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+    // const [loading, setLoading] = useState(true);  
+    // const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
 
     useEffect(() => {
@@ -134,7 +121,7 @@ function Main() {
                 setAssessmentIds(assessmentIdsArray);
             }
         }
-        setLoading(false);  // Loading is complete
+        // setLoading(false);
     }, []);
 
     const apiKey = process.env.REACT_APP_API_KEY; 
@@ -142,7 +129,7 @@ function Main() {
 
 
     const client = axios.create({
-        baseURL: "http://127.0.0.1:8000/",
+        baseURL: "https://dot-bikerack-backend-1.onrender.com",
         withCredentials: true 
       })
 
@@ -159,7 +146,7 @@ useEffect(() => {
             const jsonData = await response.json();
             console.log('response', jsonData);
             setData(jsonData);
-            console.log('data length', jsonData.length); // log jsonData.length instead of data.length
+            console.log('data length', jsonData.length); 
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -663,7 +650,7 @@ useEffect(() => {
       const handleDragEnd = (e, siteId) => {
         const position = e.target.getLatLng();
         setNewPosition({ lat: position.lat, lng: position.lng });
-        setCurrentMarker(siteId);  
+        // setCurrentMarker(siteId);  
         setshowMarkerModal(true);  
         setConfirmNewPosition(true)
       };
@@ -855,9 +842,6 @@ useEffect(() => {
                     Menu
                 </Button>
             )}
-            {/* <Button className='floating-button' onClick={handleClick}>
-                add marker
-            </Button> */}
             <div>
                 {!show && !showMarkerModal && !isRemovalMode && !isAddingMarker && isInsideGeofence && !changeMarkerLocation && (
                     <Button className='create_assessment' onClick={handleShowModal}>
@@ -1145,15 +1129,11 @@ useEffect(() => {
                             <thead>
                                 <tr>
                                 <th>Assessment Count</th>
-                                {/* <th>Assessment Streak</th> */}
-                                {/* <th>Distance Traveled</th> */}
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                 <td>{UserData.assessment_count}</td>
-                                {/* <td>{UserData.assessment_streak}</td> */}
-                                {/* <td>{UserData.distance_traveled} miles</td> */}
                                 </tr>
                                 <tr>
                                 </tr>
@@ -1164,14 +1144,12 @@ useEffect(() => {
                                 <tr>
                                 <th>Achievements Completed</th>
                                 <th>Badges Earned</th>
-                                {/* <th>Mistery Boxes Earned</th> */}
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                 <td>{UserData.achievements_completed}</td>
                                 <td>{UserData.badges_earned}</td>
-                                {/* <td>{UserData.mistery_boxes_earned}</td> */}
                                 </tr>
                                 <tr>
                                 </tr>
