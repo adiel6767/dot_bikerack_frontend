@@ -9,8 +9,8 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
 
 const client = axios.create({
-  baseURL: "https://dot-bikerack-backend-1.onrender.com/"
-  // baseURL: "http://127.0.0.1:8000/"
+  // baseURL: "https://dot-bikerack-backend-1.onrender.com/"
+  baseURL: "http://127.0.0.1:8000/"
 })
 
 function Login(){
@@ -34,7 +34,7 @@ function Login(){
       const verifyEmail = async () => {
           if (uid && token) {
               try {
-                  const response = await axios.get(`http://127.0.0.1:8000/verify-email/${uid}/${token}/`);
+                  const response = await axios.get(`https://dot-bikerack-backend-1.onrender.com/verify-email/${uid}/${token}/`);
                   setVerificationStatus('Email verified successfully.');
                   console.log('Verification successful:', response.data.message);
               } catch (error) {

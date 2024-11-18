@@ -15,7 +15,7 @@ function RegisterSuccess() {
     }
 
     function resendVerificationEmail(e) {
-        e.preventDefault();  // Prevent the default link behavior
+        e.preventDefault(); 
         const csrfToken = getCookie('csrftoken');
         client.post(
             "resend-verification-email/",
