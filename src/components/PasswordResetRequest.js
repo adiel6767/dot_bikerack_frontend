@@ -12,7 +12,7 @@ function PasswordResetRequest() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://127.0.0.1:8000/password-reset-request/', { email })
+        axios.post('https://dot-bikerack-backend-1.onrender.com/password-reset-request/', { email })
             .then(response => {
                 setMessage(response.data.message);
                 setError('');

@@ -5,7 +5,8 @@ function RegisterSuccess() {
     const email = localStorage.getItem('email');
     
     const client = axios.create({
-        baseURL: "http://127.0.0.1:8000/"
+        baseURL: "https://dot-bikerack-backend-1.onrender.com/"
+        // baseURL: "http://127.0.0.1:8000/"
     });
 
     function getCookie(name) {
@@ -15,7 +16,7 @@ function RegisterSuccess() {
     }
 
     function resendVerificationEmail(e) {
-        e.preventDefault(); 
+        e.preventDefault();  // Prevent the default link behavior
         const csrfToken = getCookie('csrftoken');
         client.post(
             "resend-verification-email/",

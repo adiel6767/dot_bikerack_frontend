@@ -16,7 +16,7 @@ const ResetCredentials = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post(`http://127.0.0.1:8000/reset-credentials/${uid}/${token}/`, { username, email })
+        axios.post(`https://dot-bikerack-backend-1.onrender.com/reset-credentials/${uid}/${token}/`, { username, email })
             .then(response => {
                 setMessage(response.data.message);
                 setTimeout(() => {

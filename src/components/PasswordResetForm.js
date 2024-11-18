@@ -29,7 +29,7 @@ function PasswordResetForm() {
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post(`http://127.0.0.1:8000/reset-password/${uid}/${token}/`, { password, password2 })
+        axios.post(`https://dot-bikerack-backend-1.onrender.com/reset-password/${uid}/${token}/`, { password, password2 })
             .then(response => {
                 setMessage(response.data.message);
                 setError('');
