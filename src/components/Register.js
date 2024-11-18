@@ -131,7 +131,7 @@ function Register() {
                                     name="Phone Number (optional)"
                                     id="form3Example1c"
                                     className="form-control"
-                                    placeholder="Phone Number"
+                                    placeholder="Phone Number (optional)"
                                     value={phone_number}
                                     onChange={handlePhoneNumberChange}
                                 />
