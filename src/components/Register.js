@@ -128,7 +128,7 @@ function Register() {
                                 <div className="form-outline flex-fill mb-0">
                                 <input
                                     type="tel"
-                                    name="Phone Number"
+                                    name="Phone Number (optional)"
                                     id="form3Example1c"
                                     className="form-control"
                                     placeholder="Phone Number"
