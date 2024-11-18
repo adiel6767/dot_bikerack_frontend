@@ -74,7 +74,7 @@ function Main() {
     const userData2 = JSON.parse(localStorage.getItem('userData'));
     const [AchievementsList,setAchievementsList] = useState([]);
     const [data, setData] = useState([]);
-    const [userLocation, setUserLocation] = useState([40.829147,-73.876165]);
+    const [userLocation, setUserLocation] = useState([]);
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
