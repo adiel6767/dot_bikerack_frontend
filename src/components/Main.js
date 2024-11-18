@@ -74,7 +74,7 @@ function Main() {
     const userData2 = JSON.parse(localStorage.getItem('userData'));
     const [AchievementsList,setAchievementsList] = useState([]);
     const [data, setData] = useState([]);
-    const [userLocation, setUserLocation] = useState([]);
+    const [userLocation, setUserLocation] = useState(null);
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
@@ -99,6 +99,7 @@ function Main() {
     const [assessmentIds, setAssessmentIds] = useState([]);
     const [loading, setLoading] = useState(true);  
 
+    console.log(userLocation)
 
     useEffect(() => {
         const storedUserData = localStorage.getItem('userData');
