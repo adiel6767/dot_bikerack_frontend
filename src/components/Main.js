@@ -9,6 +9,7 @@ import * as arcgisRest from '@esri/arcgis-rest-request';
 import { solveRoute } from '@esri/arcgis-rest-routing';
 import { Modal, Button, Nav, Popover, Toast, Container, Row, Col, Form, Alert  } from 'react-bootstrap';
 import { Table } from 'react-bootstrap';
+import InactivityHandler from "./InactivityHandler";
 
 import { 
   userMarkerIcon,
@@ -97,9 +98,21 @@ function Main() {
     const [newPosition, setNewPosition] = useState({});
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
-    const [loading, setLoading] = useState(true);  
+    const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState(() => {
+        // Get the user state from localStorage (or use a default value)
+        const storedUser = localStorage.getItem("currentUser");
+        return storedUser ? JSON.parse(storedUser) : false;
+      });
+    
 
     console.log(userLocation)
+
+    const handleTimeout = () => {
+        localStorage.clear()
+        window.location.reload();
+        alert("You have been logged out due to inactivity.");
+      };
 
     useEffect(() => {
         const storedUserData = localStorage.getItem('userData');
@@ -125,7 +138,6 @@ function Main() {
 
 
 
-    // useEffect for fetching data
 useEffect(() => {
     const fetchData = async () => {
         try {
@@ -136,7 +148,7 @@ useEffect(() => {
             const jsonData = await response.json();
             console.log('response', jsonData);
             setData(jsonData);
-            console.log('data length', jsonData.length); // log jsonData.length instead of data.length
+            console.log('data length', jsonData.length); 
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -699,8 +711,9 @@ useEffect(() => {
 
     return (
         <div className="map-container">
+            <InactivityHandler timeout={3600000} onTimeout={handleTimeout} />
             {!userLocation ? (
-            <div>Loading...</div> // Loading indicator until userLocation is available
+            <div>Loading...</div>
             ) : (
             !showMarkerModal && !show && (
                  <MapContainer center={userLocation} zoom={zoom} maxZoom={20}>
