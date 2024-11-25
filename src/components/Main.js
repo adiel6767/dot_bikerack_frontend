@@ -711,7 +711,7 @@ useEffect(() => {
 
     return (
         <div className="map-container">
-            <InactivityHandler timeout={3600000} onTimeout={handleTimeout} />
+            <InactivityHandler timeout={5000} onTimeout={handleTimeout} />
             {!userLocation ? (
             <div>Loading...</div>
             ) : (
