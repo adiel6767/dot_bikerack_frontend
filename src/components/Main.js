@@ -2,14 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import L from 'leaflet';
 import CameraCapture from './CameraCapture';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvent, Polygon  } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvent  } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import * as arcgisRest from '@esri/arcgis-rest-request';
 import { solveRoute } from '@esri/arcgis-rest-routing';
 import { Modal, Button, Nav, Popover, Toast, Container, Row, Col, Form, Alert  } from 'react-bootstrap';
 import { Table } from 'react-bootstrap';
-import InactivityHandler from "./InactivityHandler";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import { 
   userMarkerIcon,
@@ -75,7 +76,8 @@ function Main() {
     const userData2 = JSON.parse(localStorage.getItem('userData'));
     const [AchievementsList,setAchievementsList] = useState([]);
     const [data, setData] = useState([]);
-    const [userLocation, setUserLocation] = useState(null);
+    // const [userLocation, setUserLocation] = useState(null);
+    const [userLocation, setUserLocation] = useState([40.826497,-73.875553]);
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
@@ -99,20 +101,7 @@ function Main() {
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [currentUser, setCurrentUser] = useState(() => {
-        // Get the user state from localStorage (or use a default value)
-        const storedUser = localStorage.getItem("currentUser");
-        return storedUser ? JSON.parse(storedUser) : false;
-      });
-    
 
-    console.log(userLocation)
-
-    const handleTimeout = () => {
-        localStorage.clear()
-        window.location.reload();
-        alert("You have been logged out due to inactivity.");
-      };
 
     useEffect(() => {
         const storedUserData = localStorage.getItem('userData');
@@ -211,7 +200,7 @@ useEffect(() => {
             setSelectedRack(rack);
         } else {
             // Optionally show an alert or any feedback to the user
-            alert("You have already assessed this bike rack.");
+            toast.warn("You have already assessed this bike rack.");
         }
     };
     // Handle form input change
@@ -246,7 +235,7 @@ useEffect(() => {
         client.post('/create_assessment/', formDataToSend)
             .then((response) => {
                 console.log('Assessment created successfully:', response.data);
-                setTimeout(() => alert("Assessment submitted successfully!"), 100);
+                setTimeout(() => toast.success("Assessment submitted successfully!"), 100);
                 // Now, fetch the user data after assessment is created
                 client.get('/user/',{headers: {
                     Authorization: `Bearer ${token}`
@@ -281,14 +270,6 @@ useEffect(() => {
     const handleBackClick = () => {
         setSelectedRack(null);
 
-    };
-
-    const handleExitMarkerMode = () => {
-        if (markers.length > 0) {
-            handleSubmitMarkers(); 
-        }
-        setIsAddingMarker(false);
-        setIsRemovalMode(false)
     };
 
     useEffect(() => {
@@ -579,7 +560,7 @@ useEffect(() => {
 
     const MapClickHandler = () => {
         useMapEvent('click', (e) => {
-            alert("New marker added! Click save button to save to store all changes.");
+            toast.success("New marker added! Click save button to save to store all changes.");
             setMarkers((current) => [...current, e.latlng]);
             console.log(markers)
         });
@@ -594,7 +575,7 @@ useEffect(() => {
     const handleSubmitMarkers = async () => {
         if (markers.length === 0) {
             setIsAddingMarker(false)
-            alert("no markers added")
+            toast.info("no markers added")
         }
 
         try {
@@ -602,15 +583,15 @@ useEffect(() => {
     
             if (response.status === 201) {  
                 setMarkers([]); 
-                alert("Markers successfully submitted!");
+                toast.success("Markers successfully submitted!");
                 handleShowModal(true);
                 setIsAddingMarker(false);
             } else {
-                alert("Failed to submit markers. Please try again.");
+                toast.error("Failed to submit markers. Please try again.");
             }
         } catch (error) {
             console.error("Error submitting markers:", error);
-            alert("An error occurred while submitting markers.");
+            toast.error("An error occurred while submitting markers.");
         }
     };
 
@@ -619,7 +600,7 @@ useEffect(() => {
             const updatedMarkers = [...prevMarkers, item.site_id];
             return updatedMarkers;
         });
-        alert(`A request of deletion for ${item.site_id} has been created. Click save to store all changes`);
+        toast.info(`A request of deletion for ${item.site_id} has been created. Click save to store all changes`);
     };
 
     const handleExitModes = async () => {
@@ -634,7 +615,7 @@ useEffect(() => {
     const handleSubmitDeletedMarkers = async () => {
         if (deletedMarkers.length === 0) {
             setIsRemovalMode(false);
-            alert("no markers deleted")
+            toast.info("no markers deleted")
             return; 
         }
     
@@ -647,7 +628,7 @@ useEffect(() => {
     
             handleShowModal(true);
             setIsRemovalMode(false);
-            alert('data saved successfully')
+            toast.success('data saved successfully')
     
         } catch (error) {
             console.error("There was an error submitting the markers: ", error);
@@ -711,7 +692,7 @@ useEffect(() => {
 
     return (
         <div className="map-container">
-            <InactivityHandler timeout={5000} onTimeout={handleTimeout} />
+            <ToastContainer />
             {!userLocation ? (
             <div>Loading...</div>
             ) : (
@@ -770,9 +751,6 @@ useEffect(() => {
                      {routeCoordinates.length > 0 && (
                          <Polyline positions={routeCoordinates} />
                      )}
-                     {/* {geofences.map((geofence, index) => (
-                         <Polygon key={index} positions={geofence}  />
-                     ))} */}
                      {markers.map((position, idx) => {
                          return (
                              <Marker key={`marker-${idx}`} position={position} icon={customIcon}>

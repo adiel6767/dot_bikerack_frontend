@@ -3,6 +3,8 @@ import {useEffect,useState} from "react";
 import axios from 'axios';
 import { useUser } from './UserContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
@@ -135,8 +137,15 @@ function Login(){
 
   }
 
+  useEffect(() => {
+    toast.info("Logging in might take some time. Please be patient.", {
+      autoClose: 5000, 
+    });
+  }, []);
+
   return (
       <div id="body" className="d-flex align-items-center py-4 bg-body-tertiary">
+        <ToastContainer /> 
         <main className="form-signin w-100 m-auto">
           {verificationStatus && <p>{verificationStatus}</p>}    
           <form onSubmit={(e) => submitRegistration(e)}>

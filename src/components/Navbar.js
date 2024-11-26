@@ -3,6 +3,8 @@ import '../css/Navbar.css';
 import { useUser } from './UserContext'
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import InactivityHandler from "./InactivityHandler";
+
 
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
