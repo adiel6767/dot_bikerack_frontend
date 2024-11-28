@@ -76,8 +76,8 @@ function Main() {
     const userData2 = JSON.parse(localStorage.getItem('userData'));
     const [AchievementsList,setAchievementsList] = useState([]);
     const [data, setData] = useState([]);
-    // const [userLocation, setUserLocation] = useState(null);
-    const [userLocation, setUserLocation] = useState([40.826497,-73.875553]);
+    const [userLocation, setUserLocation] = useState(null);
+    // const [userLocation, setUserLocation] = useState([40.826497,-73.875553]);
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
@@ -194,16 +194,12 @@ useEffect(() => {
     };
     
     const handleRackClick = (rack) => {
-        // Check if the rack's site_id is in the user's assessment_ids
         if (!assessmentIds.includes(rack.site_id)) {
-            // Only allow setting the selected rack if it hasn't been assessed
             setSelectedRack(rack);
         } else {
-            // Optionally show an alert or any feedback to the user
             toast.warn("You have already assessed this bike rack.");
         }
     };
-    // Handle form input change
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({
@@ -258,10 +254,8 @@ useEffect(() => {
             })
             .catch((error) => {
                 console.error('Error creating assessment:', error);
-                // Handle error (e.g., show an error message)
             });
     
-        // Reset the form after submission
         setFormData({});
         setSelectedRack(null);
         handleClose();

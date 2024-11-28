@@ -1,7 +1,7 @@
 import '../css/Login.css';
 import {useEffect,useState} from "react";
 import axios from 'axios';
-import { useUser } from './UserContext';
+import { useUser } from './UserContext'; 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -25,6 +25,7 @@ function Login(){
     const [password, setPassword] = useState('')
     const [wrongpw, setwrongpw] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
+    const [loading, setLoading] = useState(false);
 
     const { login } = useUser();
     const { logout } = useUser();
@@ -78,7 +79,7 @@ function Login(){
 
     function submitRegistration(e){
       e.preventDefault();
-
+      setLoading(true);
       const csrfToken = getCookie('csrftoken');
       
       client.post(
@@ -105,8 +106,9 @@ function Login(){
         if (username || password) {
             login();
             navigate('/home');
+
         }
-    
+        setLoading(false);
         // Make the request to /user immediately after login
         return client.get('/user', {
             headers: {
@@ -117,7 +119,6 @@ function Login(){
     .then(function(userRes) {
         // Handle the response from the /user request
         localStorage.setItem('userData', JSON.stringify(userRes.data));
-    
         navigate('/home');
     })
     .catch(function(error) {
@@ -150,6 +151,7 @@ function Login(){
           {verificationStatus && <p>{verificationStatus}</p>}    
           <form onSubmit={(e) => submitRegistration(e)}>
             <h1 className="h3 mb-3 fw-normal">Please sign in</h1>
+            {loading && <div className="loading-indicator">Signing in, please wait...</div>}
             <div className="wrongpw">
               {wrongpw ? (
                 <div className="error-message" style={{ color: 'red'}}>

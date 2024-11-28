@@ -17,6 +17,8 @@ const ForgotPassword = React.lazy(() => import('./components/ForgotPassword')); 
 const ResetCredentials = React.lazy(() => import('./components/ResetCredentials'));
 const Data = React.lazy(() => import('./components/Data'));
 
+
+
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     const storedUser = localStorage.getItem("currentUser");
@@ -34,20 +36,20 @@ function App() {
 const handleTimeout = () => {
   localStorage.clear();
   window.location.reload();
-  alert("You have been logged out due to inactivity.");
   setCurrentUser(false);
 
 };
   return (
     <UserProvider>
-      {currentUser  && <InactivityHandler timeout={5000} onTimeout={handleTimeout} />}
       <div className="App">
+      {currentUser  && <InactivityHandler timeout={900000} onTimeout={handleTimeout} />}
         <Navbar />
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/onboarding" element={<RegisterSuccess />} />
             <Route path="/home" element={<Home />} />
+            {/* <Route path="/home" element={<ProtectedRoute element={<Home />} />} /> */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/main" element={<ProtectedRoute element={<Main />} />} />

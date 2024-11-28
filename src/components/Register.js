@@ -5,6 +5,7 @@ import { useUser } from './UserContext'
 import {useNavigate} from 'react-router-dom';
 import Home from "./Home";
 
+
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
