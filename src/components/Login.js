@@ -105,7 +105,7 @@ function Login(){
     
         if (username || password) {
             login();
-            navigate('/home');
+            navigate('/main');
 
         }
         setLoading(false);
