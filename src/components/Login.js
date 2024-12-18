@@ -37,9 +37,9 @@ function Login(){
       const verifyEmail = async () => {
           if (uid && token) {
               try {
-                  const response = await axios.get(`http://127.0.0.1:8000/${uid}/${token}/`);
+                  const response = await axios.get(`${client}/verify-email/${uid}/${token}/`);
                   setVerificationStatus('Email verified successfully.');
-                  console.log('Verification successful:', response.data);
+                  console.log('Verification successful:', response.data.message);
               } catch (error) {
                   setVerificationStatus('Verification failed. Please try again.');
                   console.error('Verification failed:', error);
