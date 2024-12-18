@@ -37,9 +37,9 @@ function Login(){
       const verifyEmail = async () => {
           if (uid && token) {
               try {
-                  const response = await axios.get(`${client}/${uid}/${token}/`);
+                  const response = await axios.get(`http://127.0.0.1:8000/${uid}/${token}/`);
                   setVerificationStatus('Email verified successfully.');
-                  console.log('Verification successful:', response.data.message);
+                  console.log('Verification successful:', response.data);
               } catch (error) {
                   setVerificationStatus('Verification failed. Please try again.');
                   console.error('Verification failed:', error);
@@ -105,7 +105,7 @@ function Login(){
     
         if (username || password) {
             login();
-            navigate('/main');
+            navigate('/home');
 
         }
         setLoading(false);
@@ -119,7 +119,7 @@ function Login(){
     .then(function(userRes) {
         // Handle the response from the /user request
         localStorage.setItem('userData', JSON.stringify(userRes.data));
-        navigate('/home');
+        navigate('/main');
     })
     .catch(function(error) {
         console.error(error);
