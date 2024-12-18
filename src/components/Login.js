@@ -11,8 +11,8 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.withCredentials = true;
 
 const client = axios.create({
-  baseURL: "https://dot-bikerack-backend-1.onrender.com/"
-  // baseURL: "http://127.0.0.1:8000/"
+  // baseURL: "https://dot-bikerack-backend-1.onrender.com/"
+  baseURL: "http://127.0.0.1:8000/"
 })
 
 function Login(){
