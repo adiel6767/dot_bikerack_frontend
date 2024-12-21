@@ -42,6 +42,7 @@ function Login(){
             console.log('token: ',token)
               try {
                   const response = await axios.get(`${client}/${uid}/${token}/`);
+                  console.log('response!',response)
                   setVerificationStatus('Email verified successfully.');
                   console.log('Verification successful:', response.data.message);
               } catch (error) {
