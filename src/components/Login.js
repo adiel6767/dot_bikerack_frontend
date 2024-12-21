@@ -33,6 +33,8 @@ function Login(){
     useEffect(() => {
       const storedRememberMe = localStorage.getItem('rememberMe') === 'true';
       setRememberMe(storedRememberMe);
+      console.log('out uid: ',uid)
+      console.log('out token: ',token)
 
       const verifyEmail = async () => {
           if (uid && token) {
