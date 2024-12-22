@@ -12,7 +12,7 @@ axios.defaults.withCredentials = true;
 
 const client = axios.create({
   baseURL: "https://dot-bikerack-backend-1.onrender.com/"
-  // baseURL: "http://127.0.0.1:8000/"
+  // baseURL: "http://127.0.0.1:8000"
 })
 
 function Login(){
@@ -41,7 +41,7 @@ function Login(){
             console.log('uid: ',uid)
             console.log('token: ',token)
               try {
-                  const response = await axios.get(`${client}/${uid}/${token}/`);
+                  const response = await axios.get(`https://dot-bikerack-backend-1.onrender.com/verify-email/${uid}/${token}/`);
                   console.log('response!',response)
                   setVerificationStatus('Email verified successfully.');
                   console.log('Verification successful:', response.data.message);
