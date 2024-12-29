@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../css/Register.css';
 import { useUser } from './UserContext'
 import {useNavigate} from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
 import Home from "./Home";
 
 
@@ -83,8 +84,72 @@ function Register() {
             navigate("/onboarding")
 
         }).catch(function(error) {
-            // Handle registration error
-            console.error("Error registering:", error);
+          if (error.response) {
+            const contentType = error.response.headers["content-type"];
+    
+            // Handle JSON responses
+            if (contentType && contentType.includes("application/json")) {
+                const jsonData = error.response.data;
+    
+                // Collect all error messages from the JSON response
+                let errorMessages = [];
+                for (const key in jsonData) {
+                    if (jsonData.hasOwnProperty(key)) {
+                        const value = jsonData[key];
+    
+                        // Handle arrays, objects, or single values
+                        if (Array.isArray(value)) {
+                            errorMessages.push(...value); // Add array elements to messages
+                        } else if (typeof value === "object") {
+                            // If nested object, flatten it (optional)
+                            errorMessages.push(JSON.stringify(value));
+                        } else {
+                            errorMessages.push(value); // Single value
+                        }
+                    }
+                }
+    
+                // Combine all error messages into one string
+                const combinedErrorMessage = errorMessages.join(", ");
+    
+                if (combinedErrorMessage) {
+                    console.log("Extracted Error Messages (JSON):", combinedErrorMessage);
+                    toast.error(`Error: ${combinedErrorMessage}`);
+                } else {
+                    console.error("No error messages found in JSON response.");
+                    toast.error("Error: Something went wrong.");
+                }
+            }
+            // Handle HTML responses
+            else if (contentType && contentType.includes("text/html")) {
+                const html = error.response.data;
+    
+                // Parse the HTML using DOMParser
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+    
+                // Extract the content of the <pre> tag with class "exception_value"
+                let exceptionValue = doc.querySelector("pre.exception_value")?.textContent;
+    
+                if (exceptionValue) {
+                    // Clean up brackets and quotes
+                    exceptionValue = exceptionValue.replace(/[\[\]']/g, "").trim();
+    
+                    console.log("Extracted Exception Value (HTML):", exceptionValue);
+                    toast.error(`Error: ${exceptionValue}`);
+                } else {
+                    console.error("Could not find exception value in HTML response.");
+                    toast.error("Error: Something went wrong.");
+                }
+            } else {
+                console.error("Unknown response type.");
+                toast.error("Error: Something went wrong.");
+            }
+        } else {
+            // Handle other errors (e.g., network issues)
+            console.error("Error occurred:", error.message);
+            toast.error("Error: Something went wrong.");
+        }
         });
     }
     
@@ -94,6 +159,7 @@ function Register() {
 
     return (
         <div className="register bg-body-tertiary">
+          <ToastContainer /> 
           <section className="vh-100">
             <div className="container h-100">
               <div className="row d-flex justify-content-center align-items-center h-100">
