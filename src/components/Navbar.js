@@ -18,8 +18,17 @@ function Navbar(){
 const [is_staff, setIsStaff] = useState(false)
 const navigate  = useNavigate();
 const {logout} = useUser();
-const userData = JSON.parse(localStorage.getItem('userData'));
+const userData = JSON.parse(sessionStorage.getItem('userData'));
 const { currentUser } = useUser();
+
+const handleInactivity = () => {
+  console.log("User has been inactive for the timeout period.");
+  // Example actions:
+  sessionStorage.clear();  
+  alert("You have been logged out due to inactivity.");
+  window.location.reload(); 
+};
+
 
 useEffect(() => {
   if (userData === null) {
@@ -36,8 +45,8 @@ const handleLogout = (e) => {
   e.preventDefault();
   
   // Retrieve tokens from local storage
-  const accessToken = localStorage.getItem("accessToken");
-  const refreshToken = localStorage.getItem("refreshToken");
+  const accessToken = sessionStorage.getItem("accessToken");
+  const refreshToken = sessionStorage.getItem("refreshToken");
 
   if (accessToken && refreshToken) {
       const config = {
@@ -53,9 +62,13 @@ const handleLogout = (e) => {
           config 
       )
       .then((res) => {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          // localStorage.removeItem("accessToken");
+          // localStorage.removeItem("refreshToken");
           localStorage.removeItem("userData");
+
+          sessionStorage.removeItem("userData");
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
 
           logout(); // This function should handle any state updates for logging out
           navigate('/login'); // Redirect to the login page
@@ -96,10 +109,13 @@ return (
       <div className="collapse navbar-collapse" id="navbarNav">
         <ul className="navbar-nav">
           <li className="nav-item active">
-            <a className="nav-link" href="/home">
+            <a className="nav-link" href="/home"> 
               Home
             </a>
           </li>
+          {currentUser && (
+            <InactivityHandler timeout={300000} onTimeout={handleInactivity} />
+          )}
           {currentUser ? null : (
             <li className="nav-item">
               <a className="nav-link" href="/login">

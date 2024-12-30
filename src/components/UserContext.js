@@ -10,13 +10,13 @@ export const UserProvider = ({ children }) => {
   
   const [currentUser, setCurrentUser] = useState(() => {
     // Get the user state from localStorage (or use a default value)
-    const storedUser = localStorage.getItem('currentUser');
+    const storedUser = sessionStorage.getItem('currentUser');
     return storedUser ? JSON.parse(storedUser) : false;
   });
 
   const [username] = useState(() => {
     // Get the username from localStorage (or use a default value)
-    return localStorage.getItem('username') || '';
+    return sessionStorage.getItem('username') || '';
   });
 
   const login = () => {
@@ -30,11 +30,11 @@ export const UserProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('username',username);
+    sessionStorage.setItem('username',username);
   },[username]);
 
   const get_username = localStorage.getItem('username',username)

@@ -146,7 +146,40 @@ useEffect(() => {
     fetchData();
 }, []);
 
+// useEffect(() => {
+//     const map = L.map('map').setView([40.7128, -74.0060], 12);
+
+//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//         attribution: '© OpenStreetMap contributors',
+//     }).addTo(map);
+
+//     const fetchData = async () => {
+//         try {
+//             const response = await fetch('/data.geojson');
+//             if (!response.ok) {
+//                 throw new Error('Failed to fetch GeoJSON');
+//             }
+//             const geoJsonData = await response.json();
+
+//             L.geoJSON(geoJsonData, {
+//                 onEachFeature: (feature, layer) => {
+//                     layer.bindPopup(
+//                         `<strong>${feature.properties.name || 'No Name'}</strong><br>${
+//                             feature.properties.description || 'No Description'
+//                         }`
+//                     );
+//                 },
+//             }).addTo(map);
+//         } catch (error) {
+//             console.error('Error loading GeoJSON:', error);
+//         }
+//     };
+
+//     fetchData();
+// }, []);
+
 // useEffect for geolocation
+
 useEffect(() => {
     if (navigator.geolocation) {
         const watchId = navigator.geolocation.watchPosition(

@@ -105,8 +105,11 @@ function Login(){
         const refreshToken = res.data.refresh;
         
         // Store tokens securely
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
+        // localStorage.setItem('accessToken', accessToken);
+        // localStorage.setItem('refreshToken', refreshToken);
+        
+        sessionStorage.setItem('accessToken', accessToken);
+        sessionStorage.setItem('refreshToken', refreshToken);
     
         if (username || password) {
             login();
@@ -123,7 +126,7 @@ function Login(){
     })
     .then(function(userRes) {
         // Handle the response from the /user request
-        localStorage.setItem('userData', JSON.stringify(userRes.data));
+        sessionStorage.setItem('userData', JSON.stringify(userRes.data));
         navigate('/main');
     })
     .catch(function(error) {
