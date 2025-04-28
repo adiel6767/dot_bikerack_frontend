@@ -1,17 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
+import * as turf from "@turf/turf";
+import mapboxgl from "mapbox-gl";
 import axios from 'axios';
-import L from 'leaflet';
-import CameraCapture from './CameraCapture';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvent  } from 'react-leaflet';
-import "leaflet/dist/leaflet.css";
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import * as arcgisRest from '@esri/arcgis-rest-request';
 import { solveRoute } from '@esri/arcgis-rest-routing';
 import { Modal, Button, Nav, Popover, Toast, Container, Row, Col, Form, Alert  } from 'react-bootstrap';
 import { Table } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import jsonData from '../map3.json';
 import { 
   userMarkerIcon,
   dragMakerIcon,
@@ -35,28 +32,40 @@ import {
 // CSS
 import '../css/Main.css';
 
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    // Haversine formula to calculate distance between two coordinates
-    const toRad = (value) => (value * Math.PI) / 180;
-    const R = 6371; // Radius of the Earth in km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-}
+// mapboxgl.accessToken = "pk.eyJ1IjoiYWRpZWxtYXBib3giLCJhIjoiY201dDJmMDFxMGV4aTJpcG82NzI5OXIyciJ9.yqTyFMzDmb_ANTT2DMkGAg"; 
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWRpZWxtYXBib3giLCJhIjoiY201dDJmMDFxMGV4aTJpcG82NzI5OXIyciJ9.yqTyFMzDmb_ANTT2DMkGAg';
+
+
+const CLUSTER_MAX_ZOOM = 14;
+const CLUSTER_RADIUS = 150;
+const TRACKING_RADIUS = 0.01; 
 
 
 function Main() {
+    const [showPopup, setShowPopup] = useState(true) 
+    const [nearbyMarkers,setNearbyMarkers] = useState(null);
+    const [destination, setDestination] = useState(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true); 
+    const mapContainer = useRef(null);
+    const map = useRef(null);
+    const markerClusterGroupRef = useRef(null);
     const [draggableMarkerId, setDraggableMarkerId] = useState(null);
     const [deletedMarkers, setDeletedMarkers] = useState([]);
     const [isRemovalMode, setIsRemovalMode] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [showMarkerModal,setshowMarkerModal] = useState(false)
-    const handleShowModal = () => setshowMarkerModal(true);
+
+
+    // const handleShowModal = () => setshowMarkerModal(true);
+
+
+    const openMarkerModal = () => {
+        setshowMarkerModal(true); 
+        setShowPopup(false); 
+    };
+    
     const handleCloseModal = () => {
+        setShowPopup(true); 
         setshowMarkerModal(false);
         setSelectedRack(null);
         if (!confirmNewPosition){
@@ -64,6 +73,7 @@ function Main() {
             setDraggableMarkerId(null)
         }
     };
+    
     const [leaderboardTable, setLeaderboardTable] = useState([]);
     const [isInsideGeofence, setIsInsideGeofence] = useState(false);
     const [BadgesList,setBadgestList] = useState([]);
@@ -73,11 +83,11 @@ function Main() {
     const [showPopover, setShowPopover] = useState(false);
     const targetRef = useRef(null);
     const [UserData, setUserData] = useState({})
-    const userData2 = JSON.parse(localStorage.getItem('userData'));
+    const userData2 = JSON.parse(sessionStorage.getItem('userData'));
     const [AchievementsList,setAchievementsList] = useState([]);
-    const [data, setData] = useState([]);
-    const [userLocation, setUserLocation] = useState(null);
-    // const [userLocation, setUserLocation] = useState([40.826497,-73.875553]);
+    const [data, setData] = useState(jsonData);      
+    // const [userLocation, setUserLocation] = useState(null);
+    const [userLocation, setUserLocation] = useState([ 40.8279 ,-73.8790]);  
     const [show, setShow] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
     const [showAchievements, setAchievements] = useState(false)
@@ -101,23 +111,36 @@ function Main() {
     const [zoom, setZoom] = useState(15)
     const [assessmentIds, setAssessmentIds] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [mapLoaded, setMapLoaded] = useState(false);
+    // const [map, setMap] = useState(null);
 
-
+    
     useEffect(() => {
         const storedUserData = localStorage.getItem('userData');
         
         if (storedUserData) {
-            const userData = JSON.parse(storedUserData);
-            if (userData.assessment_ids) {
-                const assessmentIdsArray = userData.assessment_ids.split(',');
-                setAssessmentIds(assessmentIdsArray);
+            try {
+                const userData = JSON.parse(storedUserData);
+    
+                if (userData.assessment_ids && typeof userData.assessment_ids === 'string') {
+                    const assessmentIdsArray = userData.assessment_ids.split(',');
+                    setAssessmentIds(assessmentIdsArray);
+                } else {
+                    console.warn("`assessment_ids` is missing or invalid in stored user data.");
+                }
+            } catch (error) {
+                console.error('Failed to parse stored user data:', error);
             }
+        } else {
+            console.warn('No stored user data found in localStorage.');
         }
+    
         setLoading(false);
     }, []);
+    
 
     const apiKey = process.env.REACT_APP_API_KEY; 
-    
+     
 
 
     const client = axios.create({
@@ -125,114 +148,16 @@ function Main() {
         withCredentials: true 
       })
 
-
-
-useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const response = await fetch('https://data.cityofnewyork.us/resource/592z-n7dk.json');
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-            const jsonData = await response.json();
-            console.log('response', jsonData);
-            setData(jsonData);
-            console.log('data length', jsonData.length); 
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
-
-    fetchData();
-}, []);
-
-// useEffect(() => {
-//     const map = L.map('map').setView([40.7128, -74.0060], 12);
-
-//     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//         attribution: '© OpenStreetMap contributors',
-//     }).addTo(map);
-
-//     const fetchData = async () => {
-//         try {
-//             const response = await fetch('/data.geojson');
-//             if (!response.ok) {
-//                 throw new Error('Failed to fetch GeoJSON');
-//             }
-//             const geoJsonData = await response.json();
-
-//             L.geoJSON(geoJsonData, {
-//                 onEachFeature: (feature, layer) => {
-//                     layer.bindPopup(
-//                         `<strong>${feature.properties.name || 'No Name'}</strong><br>${
-//                             feature.properties.description || 'No Description'
-//                         }`
-//                     );
-//                 },
-//             }).addTo(map);
-//         } catch (error) {
-//             console.error('Error loading GeoJSON:', error);
-//         }
-//     };
-
-//     fetchData();
-// }, []);
-
-// useEffect for geolocation
-
-useEffect(() => {
-    if (navigator.geolocation) {
-        const watchId = navigator.geolocation.watchPosition(
-            (position) => {
-                const newLocation = [position.coords.latitude, position.coords.longitude];
-                setUserLocation(newLocation);
-                localStorage.setItem('userLocation', JSON.stringify(newLocation)); // Save to local storage
-                console.log('Updated user location:', newLocation);
-            },
-            (error) => {
-                console.error('Error getting user location:', error);
-            }
-        );
-
-        // Cleanup the watchPosition when the component unmounts
-        return () => navigator.geolocation.clearWatch(watchId);
-    } else {
-        console.error('Geolocation is not supported by this browser.');
-    }
-}, []);
-
+      const handleRackClick = (rack) => {
+        console.log("Rack clicked:", rack); // Logs the rack object
     
-    useEffect(() => {
-        if (data.length > 0) {
-            const newGeofences = data.map(item => {
-                const lat = parseFloat(item.latitude);
-                const lng = parseFloat(item.longitude);
-                const size = 0.00003;
-                return [
-                    [lat - size, lng - size],
-                    [lat + size, lng - size],
-                    [lat + size, lng + size],
-                    [lat - size, lng + size]
-                ];
-            });
-            setGeofences(newGeofences);
-        }
-    }, [data]);
-
-    console.log(JSON.stringify(formData, null, 2));      
-    const checkGeofence = (geofence, userLocation) => {
-        const polygon = L.polygon(geofence);
-        const latLng = L.latLng(userLocation[0], userLocation[1]);
-        return polygon.getBounds().contains(latLng);
-    };
-    
-    const handleRackClick = (rack) => {
-        if (!assessmentIds.includes(rack.site_id)) {
+        if (!assessmentIds.includes(rack.Site_ID)) {
             setSelectedRack(rack);
         } else {
             toast.warn("You have already assessed this bike rack.");
         }
     };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({
@@ -255,22 +180,18 @@ useEffect(() => {
             }
         }
     
-        // Optional: Debugging the FormData content
-        for (const pair of formDataToSend.entries()) {
-            console.log(pair[0], pair[1]);  // Log each key-value pair for verification
-        }
+        
+        // for (const pair of formDataToSend.entries()) {
+        //     console.log(pair[0], pair[1]);  
+        // }
     
-        // Submit the FormData to your backend first
         client.post('/create_assessment/', formDataToSend)
             .then((response) => {
-                console.log('Assessment created successfully:', response.data);
                 setTimeout(() => toast.success("Assessment submitted successfully!"), 100);
-                // Now, fetch the user data after assessment is created
                 client.get('/user/',{headers: {
                     Authorization: `Bearer ${token}`
                 }})
                     .then((response) => {
-                        console.log('User data:', response.data);
                         localStorage.setItem('userData', JSON.stringify(response.data));
                         const userData = JSON.parse(localStorage.getItem('userData'));
 
@@ -279,7 +200,6 @@ useEffect(() => {
                             setAssessmentIds(assessmentIdsArray);
                         }
 
-                        console.log('Assessment IDs set in state:', assessmentIds); 
                     })
                     .catch((error) => {
                         console.error('Error fetching user data:', error);
@@ -298,105 +218,6 @@ useEffect(() => {
         setSelectedRack(null);
 
     };
-
-    useEffect(() => {
-        if (userLocation && geofences.length > 0) {
-            let inside = false;
-            for (let i = 0; i < geofences.length; i++) {
-                if (checkGeofence(geofences[i], userLocation)) {
-                    console.log(`User is inside geofence ${i + 1}`);
-                    setIsInsideGeofence(true);
-    
-                    // Find the closest bike racks within this geofence
-                    const sortedBikeRacks = data
-                        .filter(item => checkGeofence([
-                            [parseFloat(item.latitude) - 0.00003, parseFloat(item.longitude) - 0.00003],
-                            [parseFloat(item.latitude) + 0.00003, parseFloat(item.longitude) - 0.00003],
-                            [parseFloat(item.latitude) + 0.00003, parseFloat(item.longitude) + 0.00003],
-                            [parseFloat(item.latitude) - 0.00003, parseFloat(item.longitude) + 0.00003]
-                        ], userLocation))
-                        .map(item => ({
-                            ...item,
-                            distance: calculateDistance(userLocation[0], userLocation[1], parseFloat(item.longitude), parseFloat(item.latitude))
-                        }))
-                        .sort((a, b) => a.distance - b.distance);
-    
-                    setClosestBikeRacks(sortedBikeRacks);
-                    break; // Stop checking once we've found the user inside a geofence
-                }
-            }
-        }
-    }, [userLocation, geofences, data]);
-
-    useEffect(() => {
-        if (isInsideGeofence) {
-            setShowToast(true);
-        }
-    }, [isInsideGeofence]);
-
-    const handleSetDestination = async (e, index) => {
-        // console.log('Button Value:', e.currentTarget.value);
-        const destinationCoordinates = e.currentTarget.value.split(',').map(parseFloat);
-        // console.log('destination',destinationCoordinates)
-        
-        if (destinationMarkerIndex === index) {
-            // Unset the destination
-            setDestinationMarkerIndex(null);
-            setRouteCoordinates([]);
-            return;
-        }
-
-        // Set the new destination
-        setDestinationMarkerIndex(index);
-
-        if (userLocation) {
-            const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
-
-
-            const stops = [
-                [userLocation[1], userLocation[0]],
-                [destinationCoordinates[1], destinationCoordinates[0]], 
-            ];
-
-            try {
-                const response = await solveRoute({
-                    stops: stops,
-                    authentication,
-                });
-
-                const {
-                    routes: {
-                        features: [{ geometry: { paths } }],
-                    },
-                } = response;
-                const routeCoordinates = paths[0].map((point) => [point[1], point[0]]);
-                setRouteCoordinates(routeCoordinates);
-            } catch (error) {
-                console.error('Error solving route:', error);
-            }
-        }
-    };
-
-    const customIcon = L.icon({
-        iconUrl: markerIcon,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34]
-    });
-
-    const customIcon2 = L.icon({
-        iconUrl: dragMakerIcon,
-        iconSize: [38, 38], 
-        iconAnchor: [19, 38], 
-        popupAnchor: [0, -38], 
-      });
-    
-    const userIcon = L.icon({
-        iconUrl: userMarkerIcon,
-        iconSize: [30, 30],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34]
-    });
     
     const handleClose = () => setShow(false);
 
@@ -425,7 +246,7 @@ useEffect(() => {
         }
     
         const headers = {
-            Authorization: `Bearer ${token}`  // Include the token in the Authorization header
+            Authorization: `Bearer ${token}`  
         };
     
         client.get("/user/", { headers })
@@ -439,7 +260,6 @@ useEffect(() => {
                 setShowEmblem(false);
                 
                 const achievementsArray = res.data.achievements;
-                console.log('achievementsArray',achievementsArray)
                 setUserAchievementsIds(achievementsArray.map(obj => obj.id));
                 const badgesArray = res.data.badges;
                 setUserBadgesIds(badgesArray.map(obj => obj.id));
@@ -548,27 +368,6 @@ useEffect(() => {
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    const spiderfyShapePositions = (count, centerPt) => {
-        const distanceFromCenter = 35;
-        const markerDistance = 45;
-        const lineLength = markerDistance * (count - 1);
-        const lineStart = centerPt.y - lineLength / 2;
-        const res = [];
-
-        for (let i = count - 1; i >= 0; i--) {
-            res[i] = L.point(centerPt.x + distanceFromCenter, lineStart + markerDistance * i);
-        }
-
-        return res;
-    };
-        
-    const clusterOptions = {
-        maxClusterRadius: 40,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
-        spiderfyShapePositions
-    };
 
     function handleCreateNewMarker (e) {
         setZoom(20)
@@ -585,15 +384,13 @@ useEffect(() => {
     };
     
 
-    const MapClickHandler = () => {
-        useMapEvent('click', (e) => {
-            toast.success("New marker added! Click save button to save to store all changes.");
-            setMarkers((current) => [...current, e.latlng]);
-            console.log(markers)
-        });
-        return null;
-    };
-
+    // const MapClickHandler = () => {
+    //     useMapEvent('click', (e) => {
+    //         toast.success("New marker added! Click save button to save to store all changes.");
+    //         setMarkers((current) => [...current, e.latlng]);
+    //     });
+    //     return null;
+    // };
     const handleDeleteMarker = (index, e) => {
         e.stopPropagation(); 
         setMarkers((current) => current.filter((_, i) => i !== index)); 
@@ -611,7 +408,7 @@ useEffect(() => {
             if (response.status === 201) {  
                 setMarkers([]); 
                 toast.success("Markers successfully submitted!");
-                handleShowModal(true);
+                openMarkerModal(true);
                 setIsAddingMarker(false);
             } else {
                 toast.error("Failed to submit markers. Please try again.");
@@ -631,7 +428,7 @@ useEffect(() => {
     };
 
     const handleExitModes = async () => {
-        handleShowModal(true);
+        openMarkerModal(true);
         setIsRemovalMode(false);
         setIsAddingMarker(false);
         setChangeMarkerLocation(false);
@@ -651,9 +448,8 @@ useEffect(() => {
                 markers: deletedMarkers
             });
     
-            console.log("Response: ", response.data);
     
-            handleShowModal(true);
+            openMarkerModal(true);
             setIsRemovalMode(false);
             toast.success('data saved successfully')
     
@@ -663,48 +459,49 @@ useEffect(() => {
     };
 
     
-      const handleDragEnd = (e, siteId) => {
-        const position = e.target.getLatLng();
-        setNewPosition({ lat: position.lat, lng: position.lng });
-        setCurrentMarker(siteId);  
-        setshowMarkerModal(true);  
-        setConfirmNewPosition(true)
-      };
-    
       const handleConfirm = () => {    
         setChangeMarkerLocation(false)
         setConfirmNewPosition(false)
         setshowMarkerModal(true)
       };
 
+
       const handleSubmitAssessment = () => {
             setFormData((prevPositions) => ({
             ...prevPositions,
             user:userData2.username,
-            site_ID:selectedRack.site_id,
+            site_ID:selectedRack.properties.Site_ID,
             newPosition: JSON.stringify(newPosition),
-            boroname: selectedRack.boroname,
-            latitude: selectedRack.latitude,
-            longitude: selectedRack.longitude,
+            boroname: selectedRack.properties.boroname,
+            latitude: selectedRack.properties.latitude,
+            longitude: selectedRack.properties.longitude,
             }));
       }
 
-      const handlePhotoCapture = (photo) => {
-        console.log('handlePhotoCapture', photo);
+    console.log('formdata',formData)
+
+    //   const handlePhotoCapture = (photo) => {
+    //     console.log('handlePhotoCapture', photo);
       
-        // Directly update formData with the photo (file)
-        setFormData((prevData) => ({
-          ...prevData,
-          imageFile: photo, // Store the actual file (photo) in state, no need to use FormData here
-        }));
-      };
+    //     setFormData((prevData) => ({
+    //       ...prevData,
+    //       imageFile: photo, 
+    //     }));
+    //   };
+
+    useEffect(() => {
+        console.log("🛠 draggableMarkerId changed:", draggableMarkerId);
+    }, [draggableMarkerId]);
   
-      const handleDragMarker = () => {
-        setDraggableMarkerId(selectedRack.site_id)
-        setshowMarkerModal(false)
-        setChangeMarkerLocation(true)
-        console.log('changeMarkerLocation',changeMarkerLocation)
-    }
+    const handleDragMarker = () => {
+        if (!selectedRack || !selectedRack.properties) {
+            console.error("Selected rack is not defined or does not have properties");
+            return;
+        }
+        setDraggableMarkerId(selectedRack.properties.Site_ID);
+        setshowMarkerModal(false);
+        setChangeMarkerLocation(true);
+    };
       
     const handleCloseChangeLocation = () => {
         setshowMarkerModal(false);
@@ -717,121 +514,491 @@ useEffect(() => {
 
     }
 
-    return (
+    useEffect(() => {
+        const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                // const newLocation = [pos.coords.longitude, pos.coords.latitude];
+                const newLocation = [-73.8776, 40.8286 ];
+                setUserLocation(newLocation);
+                
+    
+                if (map.current) {
+                    const source = map.current.getSource('user-location');
+                    if (source) {
+                        source.setData({
+                            type: 'FeatureCollection',
+                            features: [
+                                {
+                                    type: 'Feature',
+                                    geometry: { type: 'Point', coordinates: newLocation },
+                                    properties: {},
+                                },
+                            ],
+                        });
+                    } else {
+                        console.warn("⚠️ 'user-location' source not found.");
+                    }
+                }
+    
+                if (map.current && isInitialLoad) {
+                    map.current.flyTo({ center: newLocation, zoom: 17, essential: true });
+    
+                    setTimeout(() => {
+                        setIsInitialLoad(false);
+                    }, 5000);
+                }
+            },
+            (err) => {
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000, 
+            }
+        );
+    
+        return () => navigator.geolocation.clearWatch(watchId);
+    }, [isInitialLoad]);
+
+    const handlePointClick = (e) => {
+
+        if (!map.current || !e.features || e.features.length === 0) {
+            console.error("Map instance or features are missing.");
+            return;
+        }
+
+        const coordinates = e.features[0].geometry.coordinates;
+        const siteId = e.features[0].properties.Site_ID;
+
+        map.current.flyTo({
+            center: coordinates,
+            zoom: map.current.getZoom(),
+            essential: true,
+        });
+        
+if (showPopup) {
+        const popup = new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(`
+            <div style="color: black;">
+                <strong>Site ID:</strong> ${siteId}<br>
+                <strong>Coordinates:</strong> ${coordinates[0].toFixed(4)}, ${coordinates[1].toFixed(4)}
+                <button 
+                    id="popupButton" 
+                    data-coordinates="${coordinates[0]},${coordinates[1]}" 
+                    data-siteid="${siteId}"
+                    style="margin-top: 5px; padding: 5px 10px; background: ${
+                        destination && destination.siteId === siteId ? "red" : "#007bff"
+                    }; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    ${destination && destination.siteId === siteId ? "Unset Destination" : "Set as Destination"}
+                </button>
+            </div>
+        `)
+        .addTo(map.current);
+    }
+    
+    // Add event listener after popup renders
+    setTimeout(() => {
+        const button = document.getElementById("popupButton");
+        if (button) {
+            button.addEventListener("click", () => {
+                const coords = button.getAttribute("data-coordinates").split(",").map(Number);
+                const siteId = button.getAttribute("data-siteid");
+    
+                setDestination((prevDestination) => {
+                    const isUnsetting = prevDestination && prevDestination.siteId === siteId;
+    
+                    // Manually update the button immediately
+                    button.textContent = isUnsetting ? "Set as Destination" : "Unset Destination";
+                    button.style.background = isUnsetting ? "#007bff" : "red";
+    
+                    if (isUnsetting) {
+                        console.log("🚫 Unsetting destination...");
+    
+                        // **Clear route coordinates & remove from map**
+                        setRouteCoordinates([]);
+                        if (map.current.getSource("route")) {
+                            map.current.removeLayer("route");
+                            map.current.removeSource("route");
+                        }
+    
+                        return null; // Unset destination
+                    } else {
+                        console.log("✅ Setting new destination...");
+                        return { coordinates: coords, siteId }; // Set new destination
+                    }
+                });
+            });
+        }
+    }, 100);
+    };
+      
+    useEffect(() => {
+        if (!mapContainer.current || map.current) return;
+    
+        map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            style: "mapbox://styles/mapbox/light-v10",
+            center: userLocation || [-73.8790, 40.8279], // Default center
+            zoom: 10,
+        });
+    
+        map.current.on("load", () => {
+            console.log("Map fully loaded ✅");
+            setMapLoaded(true);
+    
+            if (!map.current.getSource("user-location")) {
+                map.current.addSource("user-location", {
+                    type: "geojson",
+                    data: { type: "FeatureCollection", features: [] },
+                });
+    
+                map.current.addLayer({
+                    id: "user-location",
+                    type: "circle",
+                    source: "user-location",
+                    paint: {
+                        "circle-color": "red",
+                        "circle-radius": 7,
+                        "circle-stroke-width": 0,
+                    },
+                });
+            }
+    
+            if (data.length > 0) {    
+                const newGeofences = data.map((item, index) => {
+                    const lat = parseFloat(item.latitude);
+                    const lng = parseFloat(item.longitude);
+                    const size = 0.00006;
+    
+                    return {
+                        type: "Feature",
+                        properties: { id: index },
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: [[
+                                [lng - size, lat - size],
+                                [lng + size, lat - size],
+                                [lng + size, lat + size],
+                                [lng - size, lat + size],
+                                [lng - size, lat - size],
+                            ]],
+                        },
+                    };
+                });
+    
+                setGeofences(newGeofences);
+    
+                if (map.current.getSource("geofences")) {
+                    map.current.removeLayer("geofence-layer");
+                    map.current.removeSource("geofences");
+                }
+    
+                map.current.addSource("geofences", {
+                    type: "geojson",
+                    data: {
+                        type: "FeatureCollection",
+                        features: newGeofences,
+                    },
+                });
+    
+                map.current.addLayer({
+                    id: "geofence-layer",
+                    type: "fill",
+                    source: "geofences",
+                    paint: {
+                        "fill-color": "#3498db", 
+                        "fill-opacity": 0,
+                        "fill-outline-color": "#000000",
+                    },
+                });
+    
+                console.log("✅ Geofence layer added!");
+            }
+        });
+    
+        return () => {
+            if (map.current) {
+                map.current.remove();
+                map.current = null;
+            }
+        };
+    }, [data]);
+
+    useEffect(() => {
+        if (!map.current || !draggableMarkerId || data.length === 0) return;
+    
+        console.log("🔄 Updating for draggableMarkerId:", draggableMarkerId);
+    
+        // Find the selected marker's coordinates
+        const selectedSite = data.find((site) => site.Site_ID === draggableMarkerId);
+        if (!selectedSite) return;
+    
+        const { latitude, longitude } = selectedSite;
+    
+        // 🔹 Step 1: Update the color of the existing circle marker
+        map.current.setPaintProperty("unclustered-point", "circle-color", [
+            "case",
+            ["==", ["get", "Site_ID"], draggableMarkerId], "#FFA500",  // 🟠 Orange for selected
+            "#11b4da"  // 🔵 Default blue
+        ]);
+    
+        // 🔹 Step 2: Create a regular draggable Mapbox marker
+        const draggableMarker = new mapboxgl.Marker({
+            color: "#FF0000", // 🔴 Red marker on top of the circle
+            draggable: true
+        })
+            .setLngLat([longitude, latitude])
+            .addTo(map.current);
+    
+        // 🔹 Step 3: Handle drag end
+        draggableMarker.on("dragend", () => {
+            const lngLat = draggableMarker.getLngLat();
+            console.log("📍 New Marker Position:", lngLat);
+        
+            // ✅ Ensure values are numbers
+            setNewPosition({ 
+                latitude: Number(lngLat.lat), 
+                longitude: Number(lngLat.lng) 
+            });
+            
+            setConfirmNewPosition(true);
+            setshowMarkerModal(true);
+        });
+        // Cleanup previous draggable marker when changing selection
+        return () => {
+            draggableMarker.remove();
+        };
+    
+    }, [draggableMarkerId, data]);
+
+    console.log('confirm',confirmNewPosition)
+
+    
+    useEffect(() => {
+        if (!userLocation || !data.length) return;
+    
+        const markersGeoJSON = data.map((item) => {
+            return turf.point([parseFloat(item.longitude), parseFloat(item.latitude)], { Site_ID: item.Site_ID, boroname: item.boroname, latitude: item.latitude, longitude: item.longitude });
+        });
+    
+        const userPoint = turf.point(userLocation); 
+        const nearbyMarkers = markersGeoJSON.filter(marker => {
+            const distance = turf.distance(userPoint, marker, { units: "kilometers" });
+            return distance <= TRACKING_RADIUS;
+        });
+        
+        setClosestBikeRacks(nearbyMarkers); 
+    
+    }, [userLocation, data]);    
+    
+
+useEffect(() => {
+    if (!userLocation || geofences.length === 0) return;
+    
+    geofences.forEach((geofence) => {
+        const userPoint = turf.point(userLocation);
+        const polygon = turf.polygon(geofence.geometry.coordinates);
+
+        if (turf.booleanPointInPolygon(userPoint, polygon)) {
+            setIsInsideGeofence(true);
+        }
+    });
+}, [userLocation, geofences]);
+
+    
+    useEffect(() => {
+        if (!userLocation || !destination) return; // Ensure both are available
+   
+        const fetchRoute = async () => {
+            try {
+                const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
+    
+                const stops = [
+                    [userLocation[0], userLocation[1]], 
+                    [destination.coordinates[0], destination.coordinates[1]],   
+                ];    
+                const response = await solveRoute({
+                    stops: stops,
+                    authentication,
+                });
+        
+                const paths = response.routes.features[0].geometry.paths[0]; 
+                const routeCoordinates = paths.map(([lng, lat]) => [lng, lat]);
+        
+                setRouteCoordinates(routeCoordinates);
+            } catch (error) {
+                console.error("❌ Error solving route:", error);
+            }
+        };
+    
+        fetchRoute();
+    }, [userLocation, destination]); 
+    
+
+
+    useEffect(() => {
+        if (!mapLoaded || !map.current || routeCoordinates.length === 0) return;
+    
+        console.log("Updating route visualization...");
+    
+        const addRouteLayer = () => {
+            console.log("🗺️ Adding/updating route source...");
+    
+            if (!map.current.getSource("route")) {
+                map.current.addSource("route", {
+                    type: "geojson",
+                    data: {
+                        type: "Feature",
+                        geometry: {
+                            type: "LineString",
+                            coordinates: routeCoordinates,
+                        },
+                    },
+                });
+    
+                map.current.addLayer({
+                    id: "route",
+                    type: "line",
+                    source: "route",
+                    paint: {
+                        "line-color": "#FF0000",
+                        "line-width": 4,
+                    },
+                });
+            } else {
+                map.current.getSource("route").setData({
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: routeCoordinates,
+                    },
+                });
+            }
+        };
+    
+        if (map.current.isStyleLoaded()) {
+            addRouteLayer();
+        } else {
+            map.current.once("style.load", addRouteLayer);
+        }
+    }, [routeCoordinates, mapLoaded]);
+    
+    useEffect(() => {
+        if (!mapLoaded || !data || !Array.isArray(data) || !map.current) return;
+
+        const geoJSONData = {
+            type: "FeatureCollection",
+            features: data.map((item) => ({
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [item.longitude, item.latitude],
+                },
+                properties: { ...item },
+            })),
+        };
+
+        if (!map.current.getSource("sites")) {
+            map.current.addSource("sites", {
+                type: "geojson",
+                data: geoJSONData,
+                cluster: true,
+                clusterMaxZoom: CLUSTER_MAX_ZOOM,
+                clusterRadius: CLUSTER_RADIUS,
+            });
+
+            map.current.addLayer({
+                id: "clusters",
+                type: "circle",
+                source: "sites",
+                filter: ["has", "point_count"],
+                paint: {
+                    "circle-color": "#e6a051",
+                    "circle-radius": 20,
+                },
+            });
+
+            map.current.addLayer({
+                id: "cluster-count",
+                type: "symbol",
+                source: "sites",
+                filter: ["has", "point_count"],
+                layout: {
+                    "text-field": "{point_count_abbreviated}",
+                    "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+                    "text-size": 12,
+                },
+            });
+
+            map.current.addLayer({
+                id: "unclustered-point",
+                type: "circle",
+                source: "sites",
+                filter: ["!", ["has", "point_count"]],
+                paint: {
+                    "circle-color": "#11b4da",
+                    "circle-radius": 8,
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": "#fff",
+                },
+            });
+
+            console.log("Data source and layers added!");
+        } else {
+            map.current.getSource("sites").setData(geoJSONData);
+        }
+
+        map.current.on("click", "unclustered-point", handlePointClick);
+        map.current.on("click", "clusters", handleClusterClick);
+
+        return () => {
+            if (map.current) {
+                map.current.off("click", "unclustered-point", handlePointClick);
+                map.current.off("click", "clusters", handleClusterClick);
+            }
+        };
+    }, [mapLoaded, data, handlePointClick]);
+
+     // Handles clicking on a cluster to expand it
+    const handleClusterClick = (e) => {
+        if (!map.current) return;
+
+        const features = map.current.queryRenderedFeatures(e.point, {
+            layers: ["clusters"],
+        });
+        const clusterId = features[0].properties.cluster_id;
+        map.current.getSource("sites").getClusterExpansionZoom(clusterId, (err, zoom) => {
+            if (err) return;
+
+            if (!map.current) return;
+
+            map.current.easeTo({
+                center: features[0].geometry.coordinates,
+                zoom: zoom,
+            });
+        });
+    };
+
+  return (
         <div className="map-container">
             <ToastContainer />
-            {!userLocation ? (
+            {/* {!userLocation ? (
             <div>Loading...</div>
-            ) : (
-            !showMarkerModal && !show && (
-                 <MapContainer center={userLocation} zoom={zoom} maxZoom={20}>
-                 <TileLayer
-                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                         attribution='&copy; <a href="https://carto.com/">CartoDB</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                         maxZoom={20}
-                 />
-                 {isAddingMarker && <MapClickHandler />}
-                 {userLocation && (
-                     <Marker position={userLocation} icon={userIcon}>
-                         <Popup>
-                             <div>
-                                 <h3>Your Location</h3>
-                                 <p>Latitude: {userLocation[0]}</p>
-                                 <p>Longitude: {userLocation[1]}</p>
-                             </div>
-                         </Popup>
-                     </Marker>
-                 )}
-                 <MarkerClusterGroup {...clusterOptions}>
-                     {data.map((item, index) => (
-                         <Marker 
-                         key={index} 
-                         position={[parseFloat(item.latitude), parseFloat(item.longitude)]} 
-                         icon={draggableMarkerId === item.site_id ? customIcon2 : customIcon}
-                         draggable={draggableMarkerId === item.site_id}
-                         eventHandlers={{
-                            dragend: (e) => handleDragEnd(e, item.site_id),
-                          }}
-                         >
-                             <Popup>
-                                 <div>
-                                     <h3>{item.site_id}</h3>
-                                     <p>{item.latitude}</p>
-                                     <p>{item.longitude}</p>
-                                     {!changeMarkerLocation && !isRemovalMode && !isAddingMarker && (
-                                         <button className={`btn btn-${destinationMarkerIndex === index ? 'danger' : 'primary'}`} value={`${(item.latitude)},${(item.longitude)}`} onClick={(e) => handleSetDestination(e, index)}> 
-                                             {destinationMarkerIndex === index ? 'unset' : 'set as destination'}
-                                         </button>
-                                     )}
-                                     {isRemovalMode && !deletedMarkers.includes(item.site_id) && (
-                                         <button
-                                             className="btn btn-danger"
-                                             onClick={() => handleDeletedMarker(item)}
-                                         >
-                                             Remove Marker
-                                         </button>
-                                     )}
-                                 </div>
-                             </Popup>
-                         </Marker>
-                     ))}
-                     {routeCoordinates.length > 0 && (
-                         <Polyline positions={routeCoordinates} />
-                     )}
-                     {markers.map((position, idx) => {
-                         return (
-                             <Marker key={`marker-${idx}`} position={position} icon={customIcon}>
-                                 <Popup>
-                                     <div>
-                                         <h3>New Marker</h3>
-                                         <p>Latitude: {position.lat}</p>
-                                         <p>Longitude: {position.lng}</p>
-                                         {isAddingMarker && (
-                                             <Button variant="danger" onClick={(e) => handleDeleteMarker(idx, e)}>
-                                                 Delete Marker
-                                             </Button>
-                                         )}
-                                     </div>
-                                 </Popup>
-                             </Marker>
-                         );
-                     })}
- 
-                     {isAddingMarker && (
-                         <>
-                         <Alert variant="info" style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
-                             You can now click on the map to create a new marker.
-                         </Alert>
-                         </>
-     
-                     )}
-
-                    {changeMarkerLocation && (
-                         <>
-                         <Alert variant="info" style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
-                             You can now drag a marker to a new position.
-                         </Alert>
-                         </>
-     
-                     )}
- 
-                     {isRemovalMode &&(
-                         <>
-                         <Alert variant="danger" style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
-                             You can now delete a marker from  the map.
-                         </Alert>
-                         </>
-                     )}
-                 </MarkerClusterGroup>
-             </MapContainer>
-            )
-            )}
+            ) : ( */}
+            {/* !showMarkerModal && !show && ( */}
+            {!mapLoaded && <p>Loading map...</p>}
+                <div
+                ref={mapContainer} 
+                style={{ width: '100%', height: '100vh', overflow:'hidden' }} 
+              />
+            {/* ) */}
+        
             {changeMarkerLocation && !showMarkerModal && !show &&(
                 <Button variant="danger" className='create_assessment' onClick={handleExitModes}>
                             Back to Form
                 </Button>
             )}
-
         
             {isAddingMarker && isInsideGeofence && (
                 <Button variant="danger" className='create_assessment' onClick={handleExitModes}>
@@ -858,7 +1025,7 @@ useEffect(() => {
             )}
             <div>
                 {!show && !showMarkerModal && !isRemovalMode && !isAddingMarker && isInsideGeofence && !changeMarkerLocation && (
-                    <Button className='create_assessment' onClick={handleShowModal}>
+                    <Button className='create_assessment' onClick={openMarkerModal}>
                         Create Assessment
                     </Button>
                 )}
@@ -885,7 +1052,7 @@ useEffect(() => {
             
             <Modal show={showMarkerModal} onHide={handleCloseModal}>
                 <Modal.Header closeButton>
-                    <Modal.Title>{isAddingMarker || isRemovalMode || confirmNewPosition ? ('Save changes'):selectedRack ? `Create Assessment for ${selectedRack.site_id}` : 'Select Bikerack'}</Modal.Title>                
+                    <Modal.Title>{isAddingMarker || isRemovalMode || confirmNewPosition ? ('Save changes'):selectedRack ? `Create Assessment for ${selectedRack.properties.Site_ID}` : 'Select Bikerack'}</Modal.Title>                
                 </Modal.Header>
                     <Modal.Body>
                 <Container>
@@ -900,18 +1067,25 @@ useEffect(() => {
                      ) : !selectedRack ? (
                         <Row className="g-3">
                             <h3>Available Bike Racks</h3>
-                            {closestBikeRacks.map((rack, index) => (
-                                <Col key={index} className="card border-light mb-3" onClick={() => handleRackClick(rack)}                     style={{ 
-                                    cursor: assessmentIds.includes(rack.site_id) ? 'not-allowed' : 'pointer', 
-                                    width: '18rem', 
-                                    marginRight: '15px', 
-                                    marginBottom: '15px',
-                                    opacity: assessmentIds.includes(rack.site_id) ? 0.5 : 1 // Dims the card if already assessed
-                                }}>
-                                    
-                                    {rack.site_id}
-                                </Col>
-                            ))}
+                            {closestBikeRacks.map((rack, index) => {
+                                return (
+                                    <Col 
+                                        key={index} 
+                                        className="card border-light mb-3" 
+                                        onClick={() => handleRackClick(rack)}                     
+                                        style={{ 
+                                            cursor: assessmentIds.includes(rack.properties.Site_ID) ? 'not-allowed' : 'pointer', 
+                                            height: '30px', 
+                                            width: '18rem', 
+                                            marginRight: '15px', 
+                                            marginBottom: '15px',
+                                            opacity: assessmentIds.includes(rack.properties.Site_ID) ? 0.5 : 1 
+                                        }}
+                                    >
+                                        {rack.properties.Site_ID}
+                                    </Col>
+                                );
+                            })}
                             <Alert variant="warning">
                                 If you find a bike rack in the real world that is not registered in the database, please add a marker for its correct location. 
                                 If a bike rack appears in the dataset but does not exist in the real world, you can remove it from the map.
@@ -961,7 +1135,7 @@ useEffect(() => {
                                 <Form.Label>
                                     <b>Take a Picture</b>
                                 </Form.Label>
-                                <CameraCapture onPhotoCapture={handlePhotoCapture} />
+                                {/* <CameraCapture onPhotoCapture={handlePhotoCapture} /> */}
                             </Form.Group>
                             <Form.Group controlId="formAssessment">
                                 <Form.Label>
@@ -1199,7 +1373,7 @@ useEffect(() => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-        </div>
+         </div>
     );
 }
 

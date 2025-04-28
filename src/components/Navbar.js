@@ -113,9 +113,9 @@ return (
               Home
             </a>
           </li>
-          {currentUser && (
-            <InactivityHandler timeout={300000} onTimeout={handleInactivity} />
-          )}
+          {/* {currentUser && (
+            <InactivityHandler timeout={5000} onTimeout={handleInactivity} />
+          )} */}
           {currentUser ? null : (
             <li className="nav-item">
               <a className="nav-link" href="/login">

@@ -1,0 +1,290 @@
+[
+  {
+    "site_id": "M1",
+    "latitude": "40.714394",
+    "longitude": "-74.009174",
+    "name": "Manhattan Location 1"
+  },
+  {
+    "site_id": "M2",
+    "latitude": "40.716828",
+    "longitude": "-74.003219",
+    "name": "Manhattan Location 2"
+  },
+  {
+    "site_id": "M3",
+    "latitude": "40.730198",
+    "longitude": "-73.998312",
+    "name": "Manhattan Location 3"
+  },
+  {
+    "site_id": "M4",
+    "latitude": "40.724803",
+    "longitude": "-74.013731",
+    "name": "Manhattan Location 4"
+  },
+  {
+    "site_id": "M5",
+    "latitude": "40.710923",
+    "longitude": "-73.991394",
+    "name": "Manhattan Location 5"
+  },
+  {
+    "site_id": "M6",
+    "latitude": "40.738492",
+    "longitude": "-73.995143",
+    "name": "Manhattan Location 6"
+  },
+  {
+    "site_id": "M7",
+    "latitude": "40.750827",
+    "longitude": "-73.993411",
+    "name": "Manhattan Location 7"
+  },
+  {
+    "site_id": "M8",
+    "latitude": "40.740183",
+    "longitude": "-73.994756",
+    "name": "Manhattan Location 8"
+  },
+  {
+    "site_id": "M9",
+    "latitude": "40.730721",
+    "longitude": "-74.002139",
+    "name": "Manhattan Location 9"
+  },
+  {
+    "site_id": "M10",
+    "latitude": "40.715432",
+    "longitude": "-73.996738",
+    "name": "Manhattan Location 10"
+  },
+  {
+    "site_id": "B1",
+    "latitude": "40.645732",
+    "longitude": "-73.953243",
+    "name": "Brooklyn Location 1"
+  },
+  {
+    "site_id": "B2",
+    "latitude": "40.652823",
+    "longitude": "-73.972312",
+    "name": "Brooklyn Location 2"
+  },
+  {
+    "site_id": "B3",
+    "latitude": "40.660193",
+    "longitude": "-73.956124",
+    "name": "Brooklyn Location 3"
+  },
+  {
+    "site_id": "B4",
+    "latitude": "40.665324",
+    "longitude": "-73.975482",
+    "name": "Brooklyn Location 4"
+  },
+  {
+    "site_id": "B5",
+    "latitude": "40.642093",
+    "longitude": "-73.942843",
+    "name": "Brooklyn Location 5"
+  },
+  {
+    "site_id": "B6",
+    "latitude": "40.675483",
+    "longitude": "-73.994738",
+    "name": "Brooklyn Location 6"
+  },
+  {
+    "site_id": "B7",
+    "latitude": "40.682923",
+    "longitude": "-73.973932",
+    "name": "Brooklyn Location 7"
+  },
+  {
+    "site_id": "B8",
+    "latitude": "40.690324",
+    "longitude": "-73.962923",
+    "name": "Brooklyn Location 8"
+  },
+  {
+    "site_id": "B9",
+    "latitude": "40.672983",
+    "longitude": "-73.946932",
+    "name": "Brooklyn Location 9"
+  },
+  {
+    "site_id": "B10",
+    "latitude": "40.654983",
+    "longitude": "-73.966943",
+    "name": "Brooklyn Location 10"
+  },
+  {
+    "site_id": "Q1",
+    "latitude": "40.738923",
+    "longitude": "-73.854123",
+    "name": "Queens Location 1"
+  },
+  {
+    "site_id": "Q2",
+    "latitude": "40.751294",
+    "longitude": "-73.874123",
+    "name": "Queens Location 2"
+  },
+  {
+    "site_id": "Q3",
+    "latitude": "40.742193",
+    "longitude": "-73.889382",
+    "name": "Queens Location 3"
+  },
+  {
+    "site_id": "Q4",
+    "latitude": "40.746982",
+    "longitude": "-73.866482",
+    "name": "Queens Location 4"
+  },
+  {
+    "site_id": "Q5",
+    "latitude": "40.762384",
+    "longitude": "-73.889238",
+    "name": "Queens Location 5"
+  },
+  {
+    "site_id": "Q6",
+    "latitude": "40.748329",
+    "longitude": "-73.851432",
+    "name": "Queens Location 6"
+  },
+  {
+    "site_id": "Q7",
+    "latitude": "40.753483",
+    "longitude": "-73.870394",
+    "name": "Queens Location 7"
+  },
+  {
+    "site_id": "Q8",
+    "latitude": "40.754839",
+    "longitude": "-73.883432",
+    "name": "Queens Location 8"
+  },
+  {
+    "site_id": "Q9",
+    "latitude": "40.757438",
+    "longitude": "-73.861284",
+    "name": "Queens Location 9"
+  },
+  {
+    "site_id": "Q10",
+    "latitude": "40.759832",
+    "longitude": "-73.875921",
+    "name": "Queens Location 10"
+  },
+  {
+    "site_id": "BR1",
+    "latitude": "40.821923",
+    "longitude": "-73.910482",
+    "name": "Bronx Location 1"
+  },
+  {
+    "site_id": "BR2",
+    "latitude": "40.816123",
+    "longitude": "-73.889432",
+    "name": "Bronx Location 2"
+  },
+  {
+    "site_id": "BR3",
+    "latitude": "40.834239",
+    "longitude": "-73.908943",
+    "name": "Bronx Location 3"
+  },
+  {
+    "site_id": "BR4",
+    "latitude": "40.828382",
+    "longitude": "-73.915821",
+    "name": "Bronx Location 4"
+  },
+  {
+    "site_id": "BR5",
+    "latitude": "40.820394",
+    "longitude": "-73.921843",
+    "name": "Bronx Location 5"
+  },
+  {
+    "site_id": "BR6",
+    "latitude": "40.827193",
+    "longitude": "-73.903293",
+    "name": "Bronx Location 6"
+  },
+  {
+    "site_id": "BR7",
+    "latitude": "40.831983",
+    "longitude": "-73.889134",
+    "name": "Bronx Location 7"
+  },
+  {
+    "site_id": "BR8",
+    "latitude": "40.825839",
+    "longitude": "-73.902394",
+    "name": "Bronx Location 8"
+  },
+  {
+    "site_id": "SI1",
+    "latitude": "40.569483",
+    "longitude": "-74.153942",
+    "name": "Staten Island Location 1"
+  },
+  {
+    "site_id": "SI2",
+    "latitude": "40.583123",
+    "longitude": "-74.140394",
+    "name": "Staten Island Location 2"
+  },
+  {
+    "site_id": "SI3",
+    "latitude": "40.578943",
+    "longitude": "-74.168234",
+    "name": "Staten Island Location 3"
+  },
+  {
+    "site_id": "SI4",
+    "latitude": "40.571294",
+    "longitude": "-74.153432",
+    "name": "Staten Island Location 4"
+  },
+  {
+    "site_id": "SI5",
+    "latitude": "40.565839",
+    "longitude": "-74.143923",
+    "name": "Staten Island Location 5"
+  },
+  {
+    "site_id": "SI6",
+    "latitude": "40.574932",
+    "longitude": "-74.157123",
+    "name": "Staten Island Location 6"
+  },
+  {
+    "site_id": "SI7",
+    "latitude": "40.579483",
+    "longitude": "-74.149834",
+    "name": "Staten Island Location 7"
+  },
+  {
+    "site_id": "SI8",
+    "latitude": "40.570384",
+    "longitude": "-74.163932",
+    "name": "Staten Island Location 8"
+  },
+  {
+    "site_id": "SI9",
+    "latitude": "40.576193",
+    "longitude": "-74.148394",
+    "name": "Staten Island Location 9"
+  },
+  {
+    "site_id": "SI10",
+    "latitude": "40.568382",
+    "longitude": "-74.157283",
+    "name": "Staten Island Location 10"
+  }
+]
